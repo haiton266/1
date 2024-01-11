@@ -14,11 +14,38 @@ import time
 import csv
 from collections import defaultdict
 
-name_video = 'hota1'
-type_video = 'MOV'
+name_video = 'hota1'#khi ddooir hota doiodrr vùng roi
+type_video = 'MOV'#mp4 video 2-7
 name_model = 'best_10'
 name_tracking = 'BYTETracker'
 conf_thres = 0.5
+# points = np.array([[0, 338], [911, 242], [1081, 264], [1113, 316], [1646, 404], [1374, 1080], [
+#                    0, 1080]], np.int32)
+
+# hota1: 
+points = np.array([[0, 976], [567, 136], [1630, 140], [1919, 426], [1920, 1080], [
+
+                  0, 1080]], np.int32)
+# hota2: 
+# points = np.array([[0, 338], [911, 242], [1081, 264], [1113, 316], [1646, 404], [1374, 1080], [
+#                   0, 1080]], np.int32)
+# hota3: 
+# points = np.array([[0, 338], [911, 242], [954, 325], [1577, 430], [1411, 1078], [
+#                   0, 1080]], np.int32)
+# hota4: 
+# points = np.array([[0, 441], [1056, 370], [1058, 427], [1597, 501], [1476, 1080], [
+#                   0, 1080]], np.int32)
+# hota5: 
+# points = np.array([[262, 1080], [432, 50], [741, 90], [1078, 225], [1231, 344], [1920, 905], [1920, 1080], [
+#                   261, 1080]], np.int32)
+# hota6: 
+# points = np.array([[0, 1124], [188, 893], [417, 793], [696, 789], [
+#                   1080, 1463], [1080, 1920], [0, 1920]], np.int32)
+# hota7: 
+# points = np.array([[1254, 1080], [837, 329], [837, 281], [1203, 296], [
+#                   1920, 601], [1920, 1080]], np.int32)
+
+
 
 # Kiểm tra và thiết lập sử dụng GPU
 print("CUDA available:", torch.cuda.is_available())
@@ -42,12 +69,6 @@ tracker = BYTETracker()
 #     fp16=True
 # )
 
-# tracker = HybridSORT(
-#     reid_weights=Path('osnet_x0_25_msmt17.pt'),
-#     device='cuda:0',  # Sử dụng GPU
-#     half = False,
-#     det_thresh=0.5,
-# )
 
 # tracker = OCSORT()
 
@@ -80,12 +101,14 @@ track_colors = {}
 
 # Thiết lập ngưỡng kích thước tối thiểu
 min_width, min_height = 1, 1  # ví dụ: 30x30 pixels
-points = np.array([[1254, 1080], [837, 329], [837, 281], [1203, 296], [
-                  1920, 601], [1920, 1080]], np.int32)
+
+total_time = 0
+frame_count = 0
+
 with open(f'{name_tracking}/{name_video}-{name_model}.txt', 'w', newline='') as file:
     writer = csv.writer(file)
 
-    # Các thiết lập khác
+    # Các thiết lập khác``
     thickness = 2
     fontscale = 1
 
@@ -173,6 +196,8 @@ with open(f'{name_tracking}/{name_video}-{name_model}.txt', 'w', newline='') as 
         end_time = time.time()
         frame_processing_time = end_time - start_time
         progress = (frame_number / total_frames) * 100
+        total_time += frame_processing_time  # Add the processing time for this frame
+        frame_count += 1  # Increment frame count
         print(
             f"Processing frame {int(frame_number)} / {int(total_frames)} ({progress:.2f}%) - in {frame_processing_time:.2f} s")
 
@@ -180,6 +205,12 @@ with open(f'{name_tracking}/{name_video}-{name_model}.txt', 'w', newline='') as 
     vid.release()
     out.release()
     torch.cuda.synchronize()
+
+if total_time > 0:
+    fps = frame_count / total_time
+    print(f"Average FPS: {fps:.2f}")
+else:
+    print("No frames were processed.")
 
 # Tạo file seqinfo.ini
 seqinfo_content = f"""
